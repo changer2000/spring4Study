@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import study.soundsystem.CompactDisc;
 
-@Component
+@Component("lonelyHeartsClub")
 public class SgtPeppers implements CompactDisc {
 	
 	private String title = "Club Band";
