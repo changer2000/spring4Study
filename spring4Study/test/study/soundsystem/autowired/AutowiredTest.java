@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import study.soundsystem.CompactDisc;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes=CDPlayComponentScanConfig.class)
+@ContextConfiguration(classes=CDPlayComponentScanConfig.class) //@ContextConfiguration(locations="classpath:study/soundsystem/autowired/soundsystem.xml")
 public class AutowiredTest {
 
 	@Autowired
