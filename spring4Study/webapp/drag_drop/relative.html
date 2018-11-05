@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo</title>
+<style>
+.left_panel, .right_panel {
+	float:left;
+	width:200px;
+	height:700px;
+}
+.left_table {
+	width:200px;
+	height:250px;
+	background-color: green;
+}
+.left_field {
+	width:200px;
+	height:450px;
+	background-color: gray;
+}
+.box{
+	float:left;
+	position: relative;
+    overflow: hidden;
+	min-width:600px;
+    width: 100%;
+    height:700px;
+    background-color: #dddddd;
+}
+.mainarea_draggable_cmpnt {
+    position: absolute;
+	/*position: relative;*/
+	/*float:left; 父元素如果设置了position: absolute，那么这个float设不设，页面都没有变化*/
+	top:10px;
+	left:10px;
+	
+    width: 100px;height: 30px;
+    /*background-color: #cd0000;*/
+	border: 1px solid red;
+}
+
+.fieldarea_draggable_cmpnt {
+	width: 100px;height: 30px;
+	border: 1px solid blue;
+}
+
+</style>
+<link rel="stylesheet" href="js\jquery-ui.css">
+<script src="js\jquery.js"></script>
+<script src="js\jquery-ui.js"></script>
+</head>
+
+<body style="min-width:1000px;">
+Demo
+<table style="width:100%" border=0>
+<tr>
+	<td style="width:200px;">
+		<div class="left_panel">
+			<div id="tablesArea" class="left_table">
+				
+			
+			</div>
+			<div id="fieldsArea" class="left_field">
+				<div class="fieldarea_draggable_cmpnt">Item 1</div>
+				<div class="fieldarea_draggable_cmpnt">Item 2</div>
+			</div>
+		</div>
+	</td>
+	<td>
+		<div id="mainArea" class="box" style="overflow:scroll;">
+			<div id="son1" class="mainarea_draggable_cmpnt"></div>
+			
+		</div>
+	</td>
+	<td style="width:200px;">
+		<div id="rightPanel" class="right_panel" style="background-color: gray;">
+		right_panel
+		</div>
+	</td>
+</tr>
+</table>
+<input type="button" value="Clear Log" onclick="btnClick('clear');"/>
+<input type="button" value="Create Draggable" onclick="btnClick('createDraggable');"/>
+<script>
+var gMsgAreaId = "#tablesArea";
+var gMainAreaId = "#mainArea";
+var gFieldAreaId = "#fieldsArea";
+var gMaxDraggableId = 1;
+
+function outputLog(msg) {
+	console.log(msg);
+	
+	$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
+}
+
+function createDraggableComponent() {
+	gMaxDraggableId++;
+	var id = "son" + gMaxDraggableId;
+	var htmlStr = '<div id=' + id + ' class="mainarea_draggable_cmpnt"></div>';
+	$(gMainAreaId).append(htmlStr);
+	bindDrageable("#"+id);
+}
+
+function bindDrageable(selector) {
+	if (typeof(selector)=="undefined")
+		selector = ".mainarea_draggable_cmpnt";
+	
+	$(selector).draggable({
+		containment: gMainAreaId,
+		scrollSpeed: 100,
+		snap: true,
+		//opacity: 0.7,
+		//helper: "clone",
+		stop: function( event, ui ) {
+			//alert('drag stop');
+			//alert(ui.helper.context.id);
+			//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
+			//alert($('#'+ui.helper.context.id).next('div').attr('id'));
+			
+			//var obj = $('#'+ui.helper.context.id);
+			var obj = ui.helper;
+			
+			//outputLog(obj.attr('id') + ":"+obj.css('left') + "," + obj.css('top') + ", position:(" + ui.position.left + "," + ui.position.top + ")");
+			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")" + ",offset:(" + ui.offset.left + "," + ui.offset.top + ")");
+		}
+	});
+}
+
+function btnClick(btnNam) {
+	if (btnNam=='clear') {
+		$(gMsgAreaId).html('');
+	} else if (btnNam=='createDraggable') {
+		createDraggableComponent();
+	}
+	return false;
+}
+/*
+$(".mainarea_draggable_cmpnt").draggable({
+	containment: "#mainArea",
+	stop: function( event, ui ) {
+		//alert('drag stop');
+		//alert(ui.helper.context.id);
+		//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
+		//alert($('#'+ui.helper.context.id).next('div').attr('id'));
+		
+		var obj = $('#'+ui.helper.context.id);
+		//alert(obj.css('top') + "," + obj.css('left'));
+		//console.log("stop event:"+obj.css('left') + "," + obj.css('top'));
+		outputLog($(obj).attr('id') + ":"+obj.css('left') + "," + obj.css('top'));
+	}
+});
+*/
+bindDrageable();
+$(gFieldAreaId).sortable({
+  revert: "invalid"
+})
+
+$('#mainArea').droppable({
+	accept : ".fieldarea_draggable_cmpnt"
+});
+
+</script> 
+</body>
+</html>
