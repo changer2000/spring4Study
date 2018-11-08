@@ -13,16 +13,18 @@
 	width:200px;
 	height:250px;
 	background-color: green;
+	overflow:scroll;
 }
 .left_field {
 	width:200px;
 	height:450px;
 	background-color: gray;
+	overflow:scroll;
 }
 .box{
 	float:left;
 	position: relative;
-    overflow: hidden;
+    overflow:scroll;
 	min-width:600px;
     width: 100%;
     height:700px;
@@ -53,7 +55,7 @@
 
 <body style="min-width:1000px;">
 Demo
-<table style="width:100%" border=0>
+<table style="width:100%;" cellspacing=0 cellpadding=0>
 <tr>
 	<td style="width:200px;">
 		<div class="left_panel">
@@ -62,13 +64,13 @@ Demo
 			
 			</div>
 			<div id="fieldsArea" class="left_field">
-				<div class="fieldarea_draggable_cmpnt">Item 1</div>
-				<div class="fieldarea_draggable_cmpnt">Item 2</div>
+				<div id="fieldId1" class="fieldarea_draggable_cmpnt">Item 1</div>
+				<div id="fieldId2" class="fieldarea_draggable_cmpnt">Item 2</div>
 			</div>
 		</div>
 	</td>
 	<td>
-		<div id="mainArea" class="box" style="overflow:scroll;">
+		<div id="mainArea" class="box">
 			<div id="son1" class="mainarea_draggable_cmpnt"></div>
 			
 		</div>
@@ -88,17 +90,31 @@ var gMainAreaId = "#mainArea";
 var gFieldAreaId = "#fieldsArea";
 var gMaxDraggableId = 1;
 
+function pxToNum(val) {
+	if (val==null)
+		return val;
+		
+	return parseInt(val.replace(/px/i, ""), 10);
+}
+
 function outputLog(msg) {
 	console.log(msg);
 	
 	$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
 }
 
-function createDraggableComponent() {
+function createDraggableComponent(x,y) {
 	gMaxDraggableId++;
 	var id = "son" + gMaxDraggableId;
 	var htmlStr = '<div id=' + id + ' class="mainarea_draggable_cmpnt"></div>';
 	$(gMainAreaId).append(htmlStr);
+	if (x==null)
+		x = '100px';
+	if (y==null)
+		y = '100px';
+		
+	$('#'+id).css('left', x);
+	$('#'+id).css('top', y);
 	bindDrageable("#"+id);
 }
 
@@ -108,8 +124,9 @@ function bindDrageable(selector) {
 	
 	$(selector).draggable({
 		containment: gMainAreaId,
-		scrollSpeed: 100,
-		snap: true,
+		//scrollSpeed: 100,
+		//snap: true,
+		//snapMode: 'outer',
 		//opacity: 0.7,
 		//helper: "clone",
 		stop: function( event, ui ) {
@@ -122,7 +139,12 @@ function bindDrageable(selector) {
 			var obj = ui.helper;
 			
 			//outputLog(obj.attr('id') + ":"+obj.css('left') + "," + obj.css('top') + ", position:(" + ui.position.left + "," + ui.position.top + ")");
-			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")" + ",offset:(" + ui.offset.left + "," + ui.offset.top + ")");
+			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")"
+				+ ",offset:(" + ui.offset.left + "," + ui.offset.top + ")"
+				+ ",scrollLeft:" + $('#mainArea').scrollLeft()
+				+ ",this.id=" + $(this).attr('id')
+				+ ",scrollLeft:" + $(this).scrollLeft()
+				);
 		}
 	});
 }
@@ -157,9 +179,44 @@ $(gFieldAreaId).sortable({
 })
 
 $('#mainArea').droppable({
-	accept : ".fieldarea_draggable_cmpnt"
+	accept : ".fieldarea_draggable_cmpnt",
+	drop: function(event, ui) {
+		
+		//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
+		//mainArea.append(cloneObj.html());
+		//cloneObj.css('left', ui.draggable.css('left'));
+		//cloneObj.css('top', ui.draggable.css('top'));
+		
+		/*
+		outputLog("drop event:" + ui.draggable.attr('id') 
+			+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
+			+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
+			+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
+			);
+		outputLog($('#mainArea').scrollLeft());
+		*/
+		
+		var left = ui.draggable.position().left 
+			- 200 - pxToNum($('body').css('margin-left'))
+			+ $(this).scrollLeft();	//200 is left div's width
+		//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
+		//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
+		var top = ui.draggable.position().top 
+			- 20 - pxToNum($('body').css('margin-top'))
+			+ $(this).scrollTop();	//20 is "demo" text's height
+		
+		outputLog("drop: (" + left + "," + top + ")");
+		
+		
+		createDraggableComponent(left+'px', top+'px');
+		//$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
+	},
+	over: function(event, ui) {
+		//outputLog("x:" + (event.pageX - 200) + ",y:" + event.pageY);
+	}
 });
-
+//alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
+//alert($('body').css('margin-left'));
 </script> 
 </body>
 </html>
