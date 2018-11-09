@@ -46,6 +46,7 @@
 .fieldarea_draggable_cmpnt {
 	width: 100px;height: 30px;
 	border: 1px solid blue;
+	/*margin: 1px;*/
 }
 
 </style>
@@ -98,11 +99,13 @@ Demo
 </table>
 <input type="button" value="Clear Log" onclick="btnClick('clear');"/>
 <input type="button" value="Create Draggable" onclick="btnClick('createDraggable');"/>
+<input type="button" value="Create Sortable" onclick="btnClick('createSortable');"/>
 <script>
 var gMsgAreaId = "#tablesArea";
 var gMainAreaId = "#mainArea";
 var gFieldAreaId = "#fieldsArea";
 var gMaxDraggableId = 1;
+var gMaxSortableId = 15;
 
 function pxToNum(val) {
 	if (val==null)
@@ -130,6 +133,13 @@ function createDraggableComponent(x,y) {
 	$('#'+id).css('left', x);
 	$('#'+id).css('top', y);
 	bindDrageable("#"+id);
+}
+
+function createSortableComponent() {
+	gMaxSortableId++;
+	var id="fieldId" + gMaxSortableId;
+	var htmlStr = '<div id=' + id + ' class="fieldarea_draggable_cmpnt">Item ' + gMaxSortableId + '</div>';
+	$(gFieldAreaId).append(htmlStr);
 }
 
 function bindDrageable(selector) {
@@ -168,6 +178,8 @@ function btnClick(btnNam) {
 		$(gMsgAreaId).html('');
 	} else if (btnNam=='createDraggable') {
 		createDraggableComponent();
+	} else if (btnNam=='createSortable') {
+		createSortableComponent();
 	}
 	return false;
 }
@@ -231,22 +243,21 @@ $('#mainArea').droppable({
 		*/
 		
 		var left = ui.draggable.position().left 
-			- 200 - pxToNum($('body').css('margin-left'))
+			- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
 			+ $(this).scrollLeft();	//200 is left div's width
 		//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
 		//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
 		var top = ui.draggable.position().top 
-			- 20 - pxToNum($('body').css('margin-top'))
+			- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
+			+ 1
 			+ $(this).scrollTop();	//20 is "demo" text's height
 		
-		outputLog("drop: (" + left + "," + top + ")");
+		//outputLog("drop: (" + left + "," + top + ")");
+		outputLog(ui.draggable.css('margin-left'));
 		
 		
 		createDraggableComponent(left+'px', top+'px');
 		$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
-	},
-	over: function(event, ui) {
-		//outputLog("x:" + (event.pageX - 200) + ",y:" + event.pageY);
 	}
 });
 //alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
