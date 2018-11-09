@@ -5,7 +5,7 @@
   <title>Demo</title>
 <style>
 .left_panel, .right_panel {
-	float:left;
+	/*float:left;*/
 	width:200px;
 	height:700px;
 }
@@ -29,6 +29,7 @@
     width: 100%;
     height:700px;
     background-color: #dddddd;
+    display: none;
 }
 .mainarea_draggable_cmpnt {
     position: absolute;
@@ -49,6 +50,47 @@
 	/*margin: 1px;*/
 }
 
+
+.tabPanel ul {
+	padding: 0px;
+    margin: 0px;
+}
+
+.tabPanel ul li {
+    float: left;
+    margin: 0 2px 0 0;
+    border: 1px solid #aaa;
+    font-size: 11px;
+    height: 29px;
+    line-height: 30px;
+    width: 111px;
+    text-align: center;
+    cursor: pointer;
+    text-shadow: 0 1px 0 #fff;
+    border-radius: 4px 4px 0 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    background: #ddd;
+    background: -moz-linear-gradient(top, #eee, #ddd);
+    background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#ddd));
+    list-style: none;
+}
+
+.tabPanel .hit {
+    border-bottom: 0px solid #fff;
+    cursor: pointer;
+    color: black;
+    text-shadow: 0 1px 0 #fff;
+    background: #fff;
+    background: -webkit-gradient(linear, left top, left bottom, from(#e1e1e1), to(#fff));
+    background: -moz-linear-gradient(top, #e1e1e1, #fff);
+}
+
+.pane {
+    border: 1px solid #aaa;
+    border-top: 0;
+    background-color: #fff;
+    display: none;
+}
 </style>
 <link rel="stylesheet" href="js\jquery-ui.css">
 <script src="js\jquery.js"></script>
@@ -59,7 +101,7 @@
 Demo
 <table style="width:100%;" cellspacing=0 cellpadding=0>
 <tr>
-	<td style="width:200px;">
+	<td style="width:200px;vertical-align:top;">
 		<div class="left_panel">
 			<div id="tablesArea" class="left_table">
 				
@@ -85,12 +127,23 @@ Demo
 		</div>
 	</td>
 	<td>
-		<div id="mainArea" class="box">
-			<div id="son1" class="mainarea_draggable_cmpnt"></div>
-			
+		<div id="tabs" class="tabPanel">
+			<ul id="tabHndl" style="float:left;">
+				<li for="mainArea" class="hit" onclick="tabClicked(this);">Search Field</li>
+				<li for="flatArea" onclick="tabClicked(this);">Flat Field</li>
+			</ul>
+			<input type="button" value="Add List" style="float:right;height:30px;" onclick="btnClick('addList');"/>
+			<div id="tabContent" class="panes">
+				<div id="mainArea" class="mainArea box" style="display:block;">
+					<div id="son1" class="mainarea_draggable_cmpnt"></div>
+				</div>
+				<div id="flatArea" class="flatArea box">
+					list1Area
+				</div>
+			</div>
 		</div>
 	</td>
-	<td style="width:200px;">
+	<td style="width:200px;vertical-align:top;">
 		<div id="rightPanel" class="right_panel" style="background-color: gray;">
 		right_panel
 		</div>
@@ -106,6 +159,29 @@ var gMainAreaId = "#mainArea";
 var gFieldAreaId = "#fieldsArea";
 var gMaxDraggableId = 1;
 var gMaxSortableId = 15;
+
+var gTabHndlTmplt = '<li for="listAreaXX" onclick="tabClicked(this);">ListXX</li>';
+var gTabContentTmplt = '<div id="listAreaXX" class="listAreaXX box"></div>';
+
+function tabClicked(curObj) {
+	var $contentArea = $('.'+$(curObj).attr('for'));
+	
+	$(curObj).addClass('hit').siblings().removeClass('hit');
+	$('.panes>div:eq('+$contentArea.index()+')').show().siblings().hide();
+	bindDroppable($('.panes>div:eq('+$contentArea.index()+')').attr('id'));
+}
+
+function createListTab() {
+	var listCnt = $('div[id^=listArea]').size() + 1;
+	if (listCnt>3)
+		return;
+	
+	$('#tabHndl').append(gTabHndlTmplt.replace(/XX/g, listCnt));
+	$('#tabContent').append(gTabContentTmplt.replace(/XX/g, listCnt));
+	
+	//bindDroppable("#listArea" + listCnt);
+	//$("#listArea" + listCnt).siblings().droppable( "option", "accept", ".none");
+}
 
 function pxToNum(val) {
 	if (val==null)
@@ -143,6 +219,7 @@ function createSortableComponent() {
 }
 
 function bindDrageable(selector) {
+	//var curId = gMainAreaId
 	if (typeof(selector)=="undefined")
 		selector = ".mainarea_draggable_cmpnt";
 	
@@ -165,7 +242,7 @@ function bindDrageable(selector) {
 			//outputLog(obj.attr('id') + ":"+obj.css('left') + "," + obj.css('top') + ", position:(" + ui.position.left + "," + ui.position.top + ")");
 			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")"
 				+ ",offset:(" + ui.offset.left + "," + ui.offset.top + ")"
-				+ ",scrollLeft:" + $('#mainArea').scrollLeft()
+				+ ",scrollLeft:" + $(gMainAreaId).scrollLeft()
 				+ ",this.id=" + $(this).attr('id')
 				+ ",scrollLeft:" + $(this).scrollLeft()
 				);
@@ -180,6 +257,8 @@ function btnClick(btnNam) {
 		createDraggableComponent();
 	} else if (btnNam=='createSortable') {
 		createSortableComponent();
+	} else if (btnNam=='addList') {
+		createListTab();
 	}
 	return false;
 }
@@ -199,7 +278,6 @@ $(".mainarea_draggable_cmpnt").draggable({
 	}
 });
 */
-bindDrageable();
 
 /*
 $(gFieldAreaId).sortable({
@@ -224,44 +302,64 @@ $(gFieldAreaId).sortable({
 	}
 });
 
-$('#mainArea').droppable({
-	accept : ".fieldarea_draggable_cmpnt",
-	drop: function(event, ui) {
-		
-		//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
-		//mainArea.append(cloneObj.html());
-		//cloneObj.css('left', ui.draggable.css('left'));
-		//cloneObj.css('top', ui.draggable.css('top'));
-		
-		/*
-		outputLog("drop event:" + ui.draggable.attr('id') 
-			+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
-			+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
-			+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
-			);
-		outputLog($('#mainArea').scrollLeft());
-		*/
-		
-		var left = ui.draggable.position().left 
-			- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
-			+ $(this).scrollLeft();	//200 is left div's width
-		//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
-		//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
-		var top = ui.draggable.position().top 
-			- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
-			+ 1
-			+ $(this).scrollTop();	//20 is "demo" text's height
-		
-		//outputLog("drop: (" + left + "," + top + ")");
-		outputLog(ui.draggable.css('margin-left'));
-		
-		
-		createDraggableComponent(left+'px', top+'px');
-		$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
-	}
-});
+function bindDroppable(id) {
+	$(id).droppable({
+		accept : ".fieldarea_draggable_cmpnt",
+		drop: function(event, ui) {
+			
+			//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
+			//mainArea.append(cloneObj.html());
+			//cloneObj.css('left', ui.draggable.css('left'));
+			//cloneObj.css('top', ui.draggable.css('top'));
+			
+			/*
+			outputLog("drop event:" + ui.draggable.attr('id') 
+				+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
+				+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
+				+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
+				);
+			outputLog($('#mainArea').scrollLeft());
+			*/
+			
+			var left = ui.draggable.position().left 
+				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
+				+ $(this).scrollLeft();	//200 is left div's width
+			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
+			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
+			var top = ui.draggable.position().top 
+				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
+				- $('#tabHndl').outerHeight(true)
+				//+ 1
+				+ $(this).scrollTop();	//20 is "demo" text's height
+			
+			//outputLog("drop: (" + left + "," + top + ")");
+			outputLog(ui.draggable.css('margin-left'));
+			
+			
+			createDraggableComponent(left+'px', top+'px');
+			$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
+		}
+	});
+	
+	//$(id).siblings().droppable( "option", "accept", ".none");
+}
+
 //alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
 //alert($('body').css('margin-left'));
+
+/*
+$('#tabs').tabs({
+	classes: {
+		"ui-tabs": "",
+		"ui-tabs-nav": "",
+		"ui-tabs-tab": "",
+		"ui-tabs-panel": ""
+	}
+});
+*/
+bindDroppable(gMainAreaId);
+bindDrageable();
+
 </script> 
 </body>
 </html>
