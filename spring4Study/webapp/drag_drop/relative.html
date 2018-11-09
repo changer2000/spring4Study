@@ -34,9 +34,10 @@
     position: absolute;
 	/*position: relative;*/
 	/*float:left; 父元素如果设置了position: absolute，那么这个float设不设，页面都没有变化*/
-	top:10px;
+	/*top:10px;
 	left:10px;
-	
+	*/
+	padding : 2px;
     width: 100px;height: 30px;
     /*background-color: #cd0000;*/
 	border: 1px solid red;
@@ -66,6 +67,19 @@ Demo
 			<div id="fieldsArea" class="left_field">
 				<div id="fieldId1" class="fieldarea_draggable_cmpnt">Item 1</div>
 				<div id="fieldId2" class="fieldarea_draggable_cmpnt">Item 2</div>
+				<div id="fieldId3" class="fieldarea_draggable_cmpnt">Item 3</div>
+				<div id="fieldId4" class="fieldarea_draggable_cmpnt">Item 4</div>
+				<div id="fieldId5" class="fieldarea_draggable_cmpnt">Item 5</div>
+				<div id="fieldId6" class="fieldarea_draggable_cmpnt">Item 6</div>
+				<div id="fieldId7" class="fieldarea_draggable_cmpnt">Item 7</div>
+				<div id="fieldId8" class="fieldarea_draggable_cmpnt">Item 8</div>
+				<div id="fieldId9" class="fieldarea_draggable_cmpnt">Item 9</div>
+				<div id="fieldId10" class="fieldarea_draggable_cmpnt">Item 10</div>
+				<div id="fieldId11" class="fieldarea_draggable_cmpnt">Item 11</div>
+				<div id="fieldId12" class="fieldarea_draggable_cmpnt">Item 12</div>
+				<div id="fieldId13" class="fieldarea_draggable_cmpnt">Item 13</div>
+				<div id="fieldId14" class="fieldarea_draggable_cmpnt">Item 14</div>
+				<div id="fieldId15" class="fieldarea_draggable_cmpnt">Item 15</div>
 			</div>
 		</div>
 	</td>
@@ -174,9 +188,29 @@ $(".mainarea_draggable_cmpnt").draggable({
 });
 */
 bindDrageable();
+
+/*
 $(gFieldAreaId).sortable({
   revert: "invalid"
 })
+*/
+//$('div', $(gFieldAreaId)).draggable({
+$(gFieldAreaId).sortable({
+	/*scroll: true,*/
+	/*revert : "invalid",*/
+	revert : true,
+	cursor : "move",
+	start : function(event, ui) {
+		$(this).parent().attr("startScrollTop", $(this).parent().scrollTop());
+		//$(this).parent().css("overflow", "visible");
+		$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
+	},
+	stop : function(event, ui) {
+		//$(this).parent().css("overflow", "auto");
+		$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
+		return false;
+	}
+});
 
 $('#mainArea').droppable({
 	accept : ".fieldarea_draggable_cmpnt",
@@ -209,7 +243,7 @@ $('#mainArea').droppable({
 		
 		
 		createDraggableComponent(left+'px', top+'px');
-		//$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
+		$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
 	},
 	over: function(event, ui) {
 		//outputLog("x:" + (event.pageX - 200) + ",y:" + event.pageY);
