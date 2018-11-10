@@ -179,7 +179,7 @@ function createListTab() {
 	$('#tabHndl').append(gTabHndlTmplt.replace(/XX/g, listCnt));
 	$('#tabContent').append(gTabContentTmplt.replace(/XX/g, listCnt));
 	
-	//bindDroppable("#listArea" + listCnt);
+	bindDroppable("listArea" + listCnt);
 	//$("#listArea" + listCnt).siblings().droppable( "option", "accept", ".none");
 }
 
@@ -196,11 +196,11 @@ function outputLog(msg) {
 	$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
 }
 
-function createDraggableComponent(x,y) {
+function createDraggableComponent(parentId,x,y) {
 	gMaxDraggableId++;
 	var id = "son" + gMaxDraggableId;
 	var htmlStr = '<div id=' + id + ' class="mainarea_draggable_cmpnt"></div>';
-	$(gMainAreaId).append(htmlStr);
+	$('#'+parentId).append(htmlStr);
 	if (x==null)
 		x = '100px';
 	if (y==null)
@@ -208,23 +208,15 @@ function createDraggableComponent(x,y) {
 		
 	$('#'+id).css('left', x);
 	$('#'+id).css('top', y);
-	bindDrageable("#"+id);
+	bindDrageable("#"+id, "#"+parentId);
 }
-
-function createSortableComponent() {
-	gMaxSortableId++;
-	var id="fieldId" + gMaxSortableId;
-	var htmlStr = '<div id=' + id + ' class="fieldarea_draggable_cmpnt">Item ' + gMaxSortableId + '</div>';
-	$(gFieldAreaId).append(htmlStr);
-}
-
-function bindDrageable(selector) {
+function bindDrageable(selector, parentId) {
 	//var curId = gMainAreaId
 	if (typeof(selector)=="undefined")
 		selector = ".mainarea_draggable_cmpnt";
 	
 	$(selector).draggable({
-		containment: gMainAreaId,
+		containment: parentId,
 		//scrollSpeed: 100,
 		//snap: true,
 		//snapMode: 'outer',
@@ -242,19 +234,68 @@ function bindDrageable(selector) {
 			//outputLog(obj.attr('id') + ":"+obj.css('left') + "," + obj.css('top') + ", position:(" + ui.position.left + "," + ui.position.top + ")");
 			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")"
 				+ ",offset:(" + ui.offset.left + "," + ui.offset.top + ")"
-				+ ",scrollLeft:" + $(gMainAreaId).scrollLeft()
+				+ ",scrollLeft:" + $(parentId).scrollLeft()
 				+ ",this.id=" + $(this).attr('id')
 				+ ",scrollLeft:" + $(this).scrollLeft()
 				);
 		}
 	});
 }
+function bindDroppable(curId) {
+	$('#'+curId).droppable({
+		accept : ".fieldarea_draggable_cmpnt",
+		drop: function(event, ui) {
+			
+			//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
+			//mainArea.append(cloneObj.html());
+			//cloneObj.css('left', ui.draggable.css('left'));
+			//cloneObj.css('top', ui.draggable.css('top'));
+			
+			/*
+			outputLog("drop event:" + ui.draggable.attr('id') 
+				+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
+				+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
+				+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
+				);
+			outputLog($('#mainArea').scrollLeft());
+			*/
+			
+			var left = ui.draggable.position().left 
+				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
+				+ $(this).scrollLeft();	//200 is left div's width
+			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
+			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
+			var top = ui.draggable.position().top 
+				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
+				- $('#tabHndl').outerHeight(true)
+				//+ 1
+				+ $(this).scrollTop();	//20 is "demo" text's height
+			
+			//outputLog("drop: (" + left + "," + top + ")");
+			outputLog(ui.draggable.css('margin-left'));
+			
+			
+			createDraggableComponent(curId, left+'px', top+'px');
+			$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
+		}
+	});
+}
+//alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
+//alert($('body').css('margin-left'));
+
+
+function createSortableComponent() {
+	gMaxSortableId++;
+	var id="fieldId" + gMaxSortableId;
+	var htmlStr = '<div id=' + id + ' class="fieldarea_draggable_cmpnt">Item ' + gMaxSortableId + '</div>';
+	$(gFieldAreaId).append(htmlStr);
+}
 
 function btnClick(btnNam) {
 	if (btnNam=='clear') {
 		$(gMsgAreaId).html('');
 	} else if (btnNam=='createDraggable') {
-		createDraggableComponent();
+		createDraggableComponent('mainArea');
 	} else if (btnNam=='createSortable') {
 		createSortableComponent();
 	} else if (btnNam=='addList') {
@@ -302,50 +343,6 @@ $(gFieldAreaId).sortable({
 	}
 });
 
-function bindDroppable(id) {
-	$(id).droppable({
-		accept : ".fieldarea_draggable_cmpnt",
-		drop: function(event, ui) {
-			
-			//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
-			//mainArea.append(cloneObj.html());
-			//cloneObj.css('left', ui.draggable.css('left'));
-			//cloneObj.css('top', ui.draggable.css('top'));
-			
-			/*
-			outputLog("drop event:" + ui.draggable.attr('id') 
-				+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
-				+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
-				+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
-				);
-			outputLog($('#mainArea').scrollLeft());
-			*/
-			
-			var left = ui.draggable.position().left 
-				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
-				+ $(this).scrollLeft();	//200 is left div's width
-			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
-			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
-			var top = ui.draggable.position().top 
-				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
-				- $('#tabHndl').outerHeight(true)
-				//+ 1
-				+ $(this).scrollTop();	//20 is "demo" text's height
-			
-			//outputLog("drop: (" + left + "," + top + ")");
-			outputLog(ui.draggable.css('margin-left'));
-			
-			
-			createDraggableComponent(left+'px', top+'px');
-			$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
-		}
-	});
-	
-	//$(id).siblings().droppable( "option", "accept", ".none");
-}
-
-//alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
-//alert($('body').css('margin-left'));
 
 /*
 $('#tabs').tabs({
@@ -357,8 +354,11 @@ $('#tabs').tabs({
 	}
 });
 */
-bindDroppable(gMainAreaId);
-bindDrageable();
+bindDroppable('mainArea');
+bindDroppable('fieldsArea');
+//$(gMainAreaId).droppable( "option", "accept", ".none");
+$(gFieldAreaId).droppable( "option", "accept", ".none");
+bindDrageable('.mainarea_draggable_cmpnt','mainArea');
 
 </script> 
 </body>
