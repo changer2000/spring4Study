@@ -180,7 +180,6 @@ function createListTab() {
 	$('#tabContent').append(gTabContentTmplt.replace(/XX/g, listCnt));
 	
 	bindDroppable("listArea" + listCnt);
-	//$("#listArea" + listCnt).siblings().droppable( "option", "accept", ".none");
 }
 
 function pxToNum(val) {
@@ -211,7 +210,6 @@ function createDraggableComponent(parentId,x,y) {
 	bindDrageable("#"+id, "#"+parentId);
 }
 function bindDrageable(selector, parentId) {
-	//var curId = gMainAreaId
 	if (typeof(selector)=="undefined")
 		selector = ".mainarea_draggable_cmpnt";
 	
@@ -223,21 +221,12 @@ function bindDrageable(selector, parentId) {
 		//opacity: 0.7,
 		//helper: "clone",
 		stop: function( event, ui ) {
-			//alert('drag stop');
 			//alert(ui.helper.context.id);
 			//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
 			//alert($('#'+ui.helper.context.id).next('div').attr('id'));
 			
 			//var obj = $('#'+ui.helper.context.id);
 			var obj = ui.helper;
-			
-			//outputLog(obj.attr('id') + ":"+obj.css('left') + "," + obj.css('top') + ", position:(" + ui.position.left + "," + ui.position.top + ")");
-			outputLog(obj.attr('id') + ":(" + ui.position.left + "," + ui.position.top + ")"
-				+ ",offset:(" + ui.offset.left + "," + ui.offset.top + ")"
-				+ ",scrollLeft:" + $(parentId).scrollLeft()
-				+ ",this.id=" + $(this).attr('id')
-				+ ",scrollLeft:" + $(this).scrollLeft()
-				);
 		}
 	});
 }
@@ -245,43 +234,24 @@ function bindDroppable(curId) {
 	$('#'+curId).droppable({
 		accept : ".fieldarea_draggable_cmpnt",
 		drop: function(event, ui) {
-			
-			//var cloneObj = $('#'+ui.draggable.attr('id')).clone();
-			//mainArea.append(cloneObj.html());
-			//cloneObj.css('left', ui.draggable.css('left'));
-			//cloneObj.css('top', ui.draggable.css('top'));
-			
-			/*
-			outputLog("drop event:" + ui.draggable.attr('id') 
-				+ ",<br/>css=(" + ui.draggable.css('left') + "," + ui.draggable.css('top') + ")"
-				+ ",<br/>position=(" + ui.draggable.position().left + "," + ui.draggable.position().top + ")"
-				+ ",<br/>" + "offsetXY=(" + event.offsetX + "," + event.offsetY + ")"
-				);
-			outputLog($('#mainArea').scrollLeft());
-			*/
+			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
+			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
 			
 			var left = ui.draggable.position().left 
 				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
 				+ $(this).scrollLeft();	//200 is left div's width
-			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
-			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
+		
 			var top = ui.draggable.position().top 
 				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
 				- $('#tabHndl').outerHeight(true)
 				//+ 1
 				+ $(this).scrollTop();	//20 is "demo" text's height
 			
-			//outputLog("drop: (" + left + "," + top + ")");
-			outputLog(ui.draggable.css('margin-left'));
-			
-			
 			createDraggableComponent(curId, left+'px', top+'px');
-			$('#'+ui.draggable.attr('id')).hide();	//ui.draggable.remove();
+			ui.draggable.hide();
 		}
 	});
 }
-//alert($('#mainArea').css('left') + "," + $('#mainArea').css('top'));
-//alert($('body').css('margin-left'));
 
 
 function createSortableComponent() {
@@ -303,28 +273,7 @@ function btnClick(btnNam) {
 	}
 	return false;
 }
-/*
-$(".mainarea_draggable_cmpnt").draggable({
-	containment: "#mainArea",
-	stop: function( event, ui ) {
-		//alert('drag stop');
-		//alert(ui.helper.context.id);
-		//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
-		//alert($('#'+ui.helper.context.id).next('div').attr('id'));
-		
-		var obj = $('#'+ui.helper.context.id);
-		//alert(obj.css('top') + "," + obj.css('left'));
-		//console.log("stop event:"+obj.css('left') + "," + obj.css('top'));
-		outputLog($(obj).attr('id') + ":"+obj.css('left') + "," + obj.css('top'));
-	}
-});
-*/
 
-/*
-$(gFieldAreaId).sortable({
-  revert: "invalid"
-})
-*/
 //$('div', $(gFieldAreaId)).draggable({
 $(gFieldAreaId).sortable({
 	/*scroll: true,*/
@@ -339,24 +288,13 @@ $(gFieldAreaId).sortable({
 	stop : function(event, ui) {
 		//$(this).parent().css("overflow", "auto");
 		$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
-		return false;
+		return false;	//make the dragged item go back to original position when it drop in fieldArea.
 	}
 });
 
-
-/*
-$('#tabs').tabs({
-	classes: {
-		"ui-tabs": "",
-		"ui-tabs-nav": "",
-		"ui-tabs-tab": "",
-		"ui-tabs-panel": ""
-	}
-});
-*/
 bindDroppable('mainArea');
 bindDroppable('fieldsArea');
-//$(gMainAreaId).droppable( "option", "accept", ".none");
+
 $(gFieldAreaId).droppable( "option", "accept", ".none");
 bindDrageable('.mainarea_draggable_cmpnt','mainArea');
 
