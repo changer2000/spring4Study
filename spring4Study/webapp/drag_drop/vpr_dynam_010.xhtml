@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ncu="http://nittsu.co.jp/ncu"
+	template="/templates/NcuLayout.xhtml"
+	>
+	<!-- TODO: Define screen ID -->
+	<ui:param name="screenID" value="vpr_dynam_010"/>	
+	<!-- TODO: Define screen title -->
+	<ui:param name="title" value="Dynamic Create Screen Demo"/>
+	<ui:define name="htmlHead">
+		#{vprDynam010MBN.activate()}
+	</ui:define>
+	
+	<ui:define name="bodyStyle" value="min-width:1000px;"></ui:define>
+	
+	<ui:define name="head">
+<h:outputStylesheet>
+.left_panel, .right_panel {
+	/*float:left;*/
+	width:200px;
+	height:630px;
+}
+.left_table {
+	width:200px;
+	height:200px;
+	background-color: green;
+	overflow:scroll;
+}
+.left_field {
+	width:200px;
+	height:430px;
+	background-color: gray;
+	overflow:scroll;
+}
+.box{
+	float:left;
+	position: relative;
+    overflow:scroll;
+	min-width:600px;
+    width: 100%;
+    height:630px;
+    background-color: #dddddd;
+    display: none;
+}
+.mainarea_draggable_cmpnt {
+    position: absolute;
+	/*position: relative;*/
+	/*float:left; 父元素如果设置了position: absolute，那么这个float设不设，页面都没有变化*/
+	/*top:10px;
+	left:10px;
+	*/
+	padding : 2px;
+    width: 100px;height: 30px;
+    /*background-color: #cd0000;*/
+	border: 1px solid red;
+}
+
+.fieldarea_draggable_cmpnt {
+	width: 100px;height: 30px;
+	border: 1px solid blue;
+	/*margin: 1px;*/
+}
+
+
+.tabPanel ul {
+	padding: 0px;
+    margin: 0px;
+}
+
+.tabPanel ul li {
+    float: left;
+    margin: 0 2px 0 0;
+    border: 1px solid #aaa;
+    font-size: 11px;
+    height: 29px;
+    line-height: 30px;
+    width: 111px;
+    text-align: center;
+    cursor: pointer;
+    text-shadow: 0 1px 0 #fff;
+    border-radius: 4px 4px 0 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    background: #ddd;
+    background: -moz-linear-gradient(top, #eee, #ddd);
+    background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#ddd));
+    list-style: none;
+}
+
+.tabPanel .hit {
+    border-bottom: 0px solid #fff;
+    cursor: pointer;
+    color: black;
+    text-shadow: 0 1px 0 #fff;
+    background: #fff;
+    background: -webkit-gradient(linear, left top, left bottom, from(#e1e1e1), to(#fff));
+    background: -moz-linear-gradient(top, #e1e1e1, #fff);
+}
+
+.pane {
+    border: 1px solid #aaa;
+    border-top: 0;
+    background-color: #fff;
+    display: none;
+}
+</h:outputStylesheet>
+<h:outputStylesheet library="css" name="style_all.css"></h:outputStylesheet>
+
+<h:outputScript library="js" name="jquery-ui.js"></h:outputScript>
+<h:outputScript>
+	//<![CDATA[
+	
+var gMsgAreaId = "#tablesArea";
+var gMainAreaId = "#mainArea";
+var gFieldAreaId = "#fieldsArea";
+var gMaxDraggableId = 1;
+var gMaxSortableId = 15;
+
+var gTabHndlTmplt = '<li for="listAreaXX" onclick="tabClicked(this);">ListXX</li>';
+var gTabContentTmplt = '<div id="listAreaXX" class="listAreaXX box"></div>';
+
+function tabClicked(curObj) {
+	var $contentArea = $('.'+$(curObj).attr('for'));
+	
+	$(curObj).addClass('hit').siblings().removeClass('hit');
+	$('.panes>div:eq('+$contentArea.index()+')').show().siblings().hide();
+	bindDroppable($('.panes>div:eq('+$contentArea.index()+')').attr('id'));
+}
+
+function createListTab() {
+	var listCnt = $('div[id^=listArea]').size() + 1;
+	if (listCnt>3)
+		return;
+	
+	$('#tabHndl').append(gTabHndlTmplt.replace(/XX/g, listCnt));
+	$('#tabContent').append(gTabContentTmplt.replace(/XX/g, listCnt));
+	
+	bindDroppable("listArea" + listCnt);
+}
+
+function pxToNum(val) {
+	if (val==null)
+		return val;
+		
+	return parseInt(val.replace(/px/i, ""), 10);
+}
+
+function outputLog(msg) {
+	console.log(msg);
+	
+	$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
+}
+
+function createDraggableComponent(parentId,x,y) {
+	gMaxDraggableId++;
+	var id = "son" + gMaxDraggableId;
+	var htmlStr = '<div id=' + id + ' class="mainarea_draggable_cmpnt"></div>';
+	$('#'+parentId).append(htmlStr);
+	if (x==null)
+		x = '100px';
+	if (y==null)
+		y = '100px';
+		
+	$('#'+id).css('left', x);
+	$('#'+id).css('top', y);
+	bindDrageable("#"+id, "#"+parentId);
+}
+function bindDrageable(selector, parentId) {
+	if (typeof(selector)=="undefined")
+		selector = ".mainarea_draggable_cmpnt";
+	
+	$(selector).draggable({
+		containment: parentId,
+		//scrollSpeed: 100,
+		//snap: true,
+		//snapMode: 'outer',
+		//opacity: 0.7,
+		//helper: "clone",
+		stop: function( event, ui ) {
+			//alert(ui.helper.context.id);
+			//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
+			//alert($('#'+ui.helper.context.id).next('div').attr('id'));
+			
+			//var obj = $('#'+ui.helper.context.id);
+			var obj = ui.helper;
+		}
+	});
+}
+function bindDroppable(curId) {
+	$('#'+curId).droppable({
+		accept : ".fieldarea_draggable_cmpnt",
+		drop: function(event, ui) {
+			//var top = ui.draggable.position().top - event.offsetY -15 + $(this).scrollTop();
+			//var top = ui.offset.top - event.offsetY -19 + $(this).scrollTop();	//ui.offset.top - itemsInfo.OBJ_INIT_Y + $(this).scrollTop()
+					
+			var left = ui.draggable.position().left 
+				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
+				+ $(this).scrollLeft();	//200 is left div's width
+		
+			var top = ui.draggable.position().top 
+				- 14 - pxToNum($('body').css('margin-top'))
+				+ pxToNum(ui.draggable.css('margin-top'))
+				- $('#header').height()
+				- $('#tabHndl').outerHeight(true)
+				//+ 1
+				+ $(this).scrollTop();	//14 is "demo" text's height
+			
+			createDraggableComponent(curId, left+'px', top+'px');
+			ui.draggable.hide();
+		}
+	});
+}
+
+
+function createSortableComponent() {
+	gMaxSortableId++;
+	var id="fieldId" + gMaxSortableId;
+	var htmlStr = '<div id=' + id + ' class="fieldarea_draggable_cmpnt">Item ' + gMaxSortableId + '</div>';
+	$(gFieldAreaId).append(htmlStr);
+}
+
+function btnClick(btnNam) {
+	if (btnNam=='clear') {
+		$(gMsgAreaId).html('');
+	} else if (btnNam=='createDraggable') {
+		createDraggableComponent('mainArea');
+	} else if (btnNam=='createSortable') {
+		createSortableComponent();
+	} else if (btnNam=='addList') {
+		createListTab();
+	}
+	return false;
+}
+
+
+
+$(function(){
+	//$('div', $(gFieldAreaId)).draggable({
+	$(gFieldAreaId).sortable({
+		/*scroll: true,*/
+		/*revert : "invalid",*/
+		revert : true,
+		cursor : "move",
+		start : function(event, ui) {
+			$(this).parent().attr("startScrollTop", $(this).parent().scrollTop());
+			//$(this).parent().css("overflow", "visible");
+			$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
+		},
+		stop : function(event, ui) {
+			//$(this).parent().css("overflow", "auto");
+			$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
+			return false;	//make the dragged item go back to original position when it drop in fieldArea.
+		}
+	});
+
+	bindDroppable('mainArea');
+	bindDroppable('fieldsArea');
+	
+	$(gFieldAreaId).droppable( "option", "accept", ".none");
+	bindDrageable('.mainarea_draggable_cmpnt','mainArea');
+});
+	 
+	//]]>
+</h:outputScript>
+	</ui:define>
+	<ui:define name="content">
+Demo
+<table style="width:100%;" cellspacing='0' cellpadding='0'>
+<tr>
+	<td style="width:200px;vertical-align:top;">
+		<div class="left_panel">
+			<div id="tablesArea" class="left_table">
+				
+			
+			</div>
+			<div id="fieldsArea" class="left_field">
+				<div id="fieldId1" class="fieldarea_draggable_cmpnt">Item 1</div>
+				<div id="fieldId2" class="fieldarea_draggable_cmpnt">Item 2</div>
+				<div id="fieldId3" class="fieldarea_draggable_cmpnt">Item 3</div>
+				<div id="fieldId4" class="fieldarea_draggable_cmpnt">Item 4</div>
+				<div id="fieldId5" class="fieldarea_draggable_cmpnt">Item 5</div>
+				<div id="fieldId6" class="fieldarea_draggable_cmpnt">Item 6</div>
+				<div id="fieldId7" class="fieldarea_draggable_cmpnt">Item 7</div>
+				<div id="fieldId8" class="fieldarea_draggable_cmpnt">Item 8</div>
+				<div id="fieldId9" class="fieldarea_draggable_cmpnt">Item 9</div>
+				<div id="fieldId10" class="fieldarea_draggable_cmpnt">Item 10</div>
+				<div id="fieldId11" class="fieldarea_draggable_cmpnt">Item 11</div>
+				<div id="fieldId12" class="fieldarea_draggable_cmpnt">Item 12</div>
+				<div id="fieldId13" class="fieldarea_draggable_cmpnt">Item 13</div>
+				<div id="fieldId14" class="fieldarea_draggable_cmpnt">Item 14</div>
+				<div id="fieldId15" class="fieldarea_draggable_cmpnt">Item 15</div>
+			</div>
+		</div>
+	</td>
+	<td>
+		<div id="tabs" class="tabPanel">
+			<ul id="tabHndl" style="float:left;">
+				<li for="mainArea" class="hit" onclick="tabClicked(this);">Search Field</li>
+				<li for="flatArea" onclick="tabClicked(this);">Flat Field</li>
+			</ul>
+			<input type="button" value="Add List" style="float:right;height:30px;" onclick="btnClick('addList');"/>
+			<div id="tabContent" class="panes">
+				<div id="mainArea" class="mainArea box" style="display:block;">
+					<div id="son1" class="mainarea_draggable_cmpnt"></div>
+				</div>
+				<div id="flatArea" class="flatArea box">
+					list1Area
+				</div>
+			</div>
+		</div>
+	</td>
+	<td style="width:200px;vertical-align:top;">
+		<div id="rightPanel" class="right_panel" style="background-color: gray;">
+		right_panel
+		</div>
+	</td>
+</tr>
+</table>
+<input type="button" value="Clear Log" onclick="btnClick('clear');"/>
+<input type="button" value="Create Draggable" onclick="btnClick('createDraggable');"/>
+<input type="button" value="Create Sortable" onclick="btnClick('createSortable');"/>
+	</ui:define>
+	 
+	<ui:define name="command">
+		<table>
+			<tr>
+				<td style="width: 90px;"><p:commandButton id="FK13" value="F13" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK14" value="F14" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK15" value="F15" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK16" value="F16" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK17" value="F17" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK18" value="F18" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK19" value="F19" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK20" value="F20" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK21" value="F21" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK22" value="F22" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK23" value="F23" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+				<td style="width: 90px;"><p:commandButton id="FK24" value="F24" ajax="false" styleClass="novalidate"
+						style="display:none;" /></td>
+			</tr>
+		</table>
+	</ui:define>
+	<ui:define name="localCommand">
+		<!-- 
+		Reserved area.
+		 -->
+	</ui:define>
+</ui:composition>
