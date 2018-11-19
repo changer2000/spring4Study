@@ -42,11 +42,13 @@
     width: 100px;height: 30px;
     /*background-color: #cd0000;*/
 	border: 1px solid red;
+	overflow:hidden;
 }
 
 .fieldarea_draggable_cmpnt {
 	width: 100px;height: 30px;
 	border: 1px solid blue;
+	overflow:hidden;
 	/*margin: 1px;*/
 }
 
@@ -108,7 +110,7 @@ Demo
 			
 			</div>
 			<div id="fieldsArea" class="left_field">
-				<div id="fieldId1" class="fieldarea_draggable_cmpnt">Item 1</div>
+				<div id="fieldId1" class="fieldarea_draggable_cmpnt">Item 1 dsafasdf asfasfas dsf</div>
 				<div id="fieldId2" class="fieldarea_draggable_cmpnt">Item 2</div>
 				<div id="fieldId3" class="fieldarea_draggable_cmpnt">Item 3</div>
 				<div id="fieldId4" class="fieldarea_draggable_cmpnt">Item 4</div>
@@ -135,7 +137,7 @@ Demo
 			<input type="button" value="Add List" style="float:right;height:30px;" onclick="btnClick('addList');"/>
 			<div id="tabContent" class="panes">
 				<div id="mainArea" class="mainArea box" style="display:block;">
-					<div id="son1" class="mainarea_draggable_cmpnt"></div>
+					<div id="son1" class="mainarea_draggable_cmpnt">Item X dsafasdf asfasfas dsf</div>
 				</div>
 				<div id="flatArea" class="flatArea box">
 					list1Area
@@ -153,6 +155,7 @@ Demo
 <input type="button" value="Clear Log" onclick="btnClick('clear');"/>
 <input type="button" value="Create Draggable" onclick="btnClick('createDraggable');"/>
 <input type="button" value="Create Sortable" onclick="btnClick('createSortable');"/>
+<input type="button" value="Json To Object" onclick="btnClick('jsonToObject');"/>
 <script>
 var gMsgAreaId = "#tablesArea";
 var gMainAreaId = "#mainArea";
@@ -192,7 +195,7 @@ function pxToNum(val) {
 function outputLog(msg) {
 	console.log(msg);
 	
-	$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
+	//$(gMsgAreaId).html(msg + "<br/>" + $(gMsgAreaId).html());
 }
 
 function createDraggableComponent(parentId,x,y) {
@@ -220,14 +223,52 @@ function bindDrageable(selector, parentId) {
 		//snapMode: 'outer',
 		//opacity: 0.7,
 		//helper: "clone",
+		start: function(event, ui) {
+			outputLog("begin record mouce track");
+			enableMouseTrack();
+		},
 		stop: function( event, ui ) {
 			//alert(ui.helper.context.id);
 			//alert($('#'+ui.helper.context.id).prev('div').attr('id')); 还是按照原来位置拿prev/next
 			//alert($('#'+ui.helper.context.id).next('div').attr('id'));
 			
 			//var obj = $('#'+ui.helper.context.id);
-			var obj = ui.helper;
+			//var obj = ui.helper;
+			
+			disableMouseTrack();
+			judgeMouseTrace();
+			
+			/*
+			var left = ui.draggable.position().left 
+				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
+				+ $(this).scrollLeft();	//200 is left div's width
+		
+			var top = ui.draggable.position().top 
+				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
+				- $('#tabHndl').outerHeight(true)
+				//+ 1
+				+ $(this).scrollTop();	//20 is "demo" text's height
+			
+			*/
+			outputLog('stop at [' + ui.position.left + ',' + ui.position.top + ']');
+			if (ui.position.left<0)
+				ui.helper.css('left', '0px');
+			if (ui.position.top<0)
+				ui.helper.css('top', '0px');
+			
+			/*
+			ui.position.left = 0;
+			ui.position.top = 0;
+			*/
+			
+			
+			
 		}
+		/*,
+		helper: function( event ) {
+			return $("<div class='mainarea_draggable_cmpnt' style='width:80px;height:25px;'>Ab Cd</div>");
+		}
+		*/
 	});
 }
 function bindDroppable(curId) {
@@ -240,16 +281,32 @@ function bindDroppable(curId) {
 			var left = ui.draggable.position().left 
 				- 200 - pxToNum($('body').css('margin-left')) + pxToNum(ui.draggable.css('margin-left'))
 				+ $(this).scrollLeft();	//200 is left div's width
-		
+			if (left<0)
+				left = 0;
+				
 			var top = ui.draggable.position().top 
 				- 20 - pxToNum($('body').css('margin-top')) + pxToNum(ui.draggable.css('margin-top'))
 				- $('#tabHndl').outerHeight(true)
 				//+ 1
 				+ $(this).scrollTop();	//20 is "demo" text's height
-			
+			if (top<0)
+				top = 0;
+				
 			createDraggableComponent(curId, left+'px', top+'px');
 			ui.draggable.hide();
+			
+			disableMouseTrack();
+			judgeMouseTrace();
+			outputLog('drop at [' + left + ',' + top + ']');
 		}
+		,
+		over: function( event, ui ) {
+			//gMousemoveSeq++;
+			//outputLog(gMousemoveSeq + ":" +  event.pageX + ", " + event.pageY);
+			outputLog("begin record mouce track");
+			enableMouseTrack();
+		}
+		
 	});
 }
 
@@ -270,8 +327,24 @@ function btnClick(btnNam) {
 		createSortableComponent();
 	} else if (btnNam=='addList') {
 		createListTab();
+	} else if (btnNam=='jsonToObject') {
+		json2Object();
 	}
 	return false;
+}
+
+function json2Object() {
+	var jsonStr = '{"areaType":1,"areaId":"SAMPLE_HEAD_FLAT_AREA","tableList":[{"fileId":"TJVPRSI","allFieldList":[{"hide":false,"dspFldId":"kTjvprsiSiNo","fieldId":null,"fieldSeqNo":null,"dspCndt":null,"dspFldNm":null,"dspFldTyp":null,"editTgt":null,"fileFldId":null,"fileId":null,"fldLen":10,"fldLenDec":null,"mndtryFlg":null,"cntrlFieldId":null,"inpMthd":null,"opnFlg":null,"cntrlSeqNo":null,"sortFlg":null,"tblId":null,"tblSeq":null,"tblSeqSub":null,"xAxis":null,"yAxis":null,"fldWid":200,"lblMap":{"cn":{"localeCodSeq":1,"lblId":2,"localeCod":"cn","lblNm":"CN lbl of siNo"},"en":{"localeCodSeq":1,"lblId":2,"localeCod":"en","lblNm":"EN lbl of siNo"},"ja":{"localeCodSeq":1,"lblId":2,"localeCod":"ja","lblNm":"JP lbl of siNo"}}},{"hide":false,"dspFldId":"kTjvprsiJobNo","fieldId":null,"fieldSeqNo":null,"dspCndt":null,"dspFldNm":null,"dspFldTyp":null,"editTgt":null,"fileFldId":null,"fileId":null,"fldLen":11,"fldLenDec":null,"mndtryFlg":null,"cntrlFieldId":null,"inpMthd":null,"opnFlg":null,"cntrlSeqNo":null,"sortFlg":null,"tblId":null,"tblSeq":null,"tblSeqSub":null,"xAxis":null,"yAxis":null,"fldWid":201,"lblMap":{"cn":{"localeCodSeq":1,"lblId":2,"localeCod":"cn","lblNm":"CN lbl of jobNo"},"en":{"localeCodSeq":1,"lblId":2,"localeCod":"en","lblNm":"EN lbl of jobNo"},"ja":{"localeCodSeq":1,"lblId":2,"localeCod":"ja","lblNm":"JP lbl of jobNo"}}}],"selectedFieldList":[]},{"fileId":"TJVPRJOB","allFieldList":[{"hide":false,"dspFldId":"kTjvprjobJobNo","fieldId":null,"fieldSeqNo":null,"dspCndt":null,"dspFldNm":null,"dspFldTyp":null,"editTgt":null,"fileFldId":null,"fileId":null,"fldLen":12,"fldLenDec":null,"mndtryFlg":null,"cntrlFieldId":null,"inpMthd":null,"opnFlg":null,"cntrlSeqNo":null,"sortFlg":null,"tblId":null,"tblSeq":null,"tblSeqSub":null,"xAxis":null,"yAxis":null,"fldWid":202,"lblMap":{"cn":{"localeCodSeq":1,"lblId":2,"localeCod":"cn","lblNm":"CN lbl of jobNo"},"en":{"localeCodSeq":1,"lblId":2,"localeCod":"en","lblNm":"EN lbl of jobNo"},"ja":{"localeCodSeq":1,"lblId":2,"localeCod":"ja","lblNm":"JP lbl of jobNo"}}},{"hide":false,"dspFldId":"kTjvprjobJobSeq","fieldId":null,"fieldSeqNo":null,"dspCndt":null,"dspFldNm":null,"dspFldTyp":null,"editTgt":null,"fileFldId":null,"fileId":null,"fldLen":13,"fldLenDec":null,"mndtryFlg":null,"cntrlFieldId":null,"inpMthd":null,"opnFlg":null,"cntrlSeqNo":null,"sortFlg":null,"tblId":null,"tblSeq":null,"tblSeqSub":null,"xAxis":null,"yAxis":null,"fldWid":203,"lblMap":{"cn":{"localeCodSeq":1,"lblId":2,"localeCod":"cn","lblNm":"CN lbl of jobSeq"},"en":{"localeCodSeq":1,"lblId":2,"localeCod":"en","lblNm":"EN lbl of jobSeq"},"ja":{"localeCodSeq":1,"lblId":2,"localeCod":"ja","lblNm":"JP lbl of jobSeq"}}}],"selectedFieldList":[]}]}';
+	try {
+		var obj = JSON.parse(jsonStr);
+		//alert(obj);
+		
+		var jsonStr2 = JSON.stringify(obj);
+		alert(jsonStr2);
+		$('#mainArea').html(jsonStr2);
+	} catch (e){
+		alert(e);
+	}
 }
 
 //$('div', $(gFieldAreaId)).draggable({
@@ -287,6 +360,9 @@ $(gFieldAreaId).sortable({
 	},
 	stop : function(event, ui) {
 		//$(this).parent().css("overflow", "auto");
+		disableMouseTrack();
+		judgeMouseTrace();
+		
 		$(this).parent().scrollTop(parseInt($(this).parent().attr("startScrollTop")));
 		return false;	//make the dragged item go back to original position when it drop in fieldArea.
 	}
@@ -297,6 +373,76 @@ bindDroppable('fieldsArea');
 
 $(gFieldAreaId).droppable( "option", "accept", ".none");
 bindDrageable('.mainarea_draggable_cmpnt','mainArea');
+
+
+///////////////////// 记录mouse 运动轨迹
+var gCouldRecordMouseTrace = false;
+var gMousemoveSeq = 0;
+var gMousePosition = [];
+var gMaxMousePositionCount = 10;
+function recordMouseTrack(e) {
+	if (isAbleMouseTrace()) {
+		if (gMousemoveSeq>gMaxMousePositionCount)
+			gMousemoveSeq = 0;
+		
+		gMousePosition[gMousemoveSeq] = [e.pageX, e.pageY];
+		//outputLog(gMousemoveSeq + ":" +  gMousePosition[gMousemoveSeq][0] + ", " + gMousePosition[gMousemoveSeq][1]);
+		
+		gMousemoveSeq++;
+	}
+}
+function enableMouseTrack(clearAryFlg) {
+	gCouldRecordMouseTrace = true;
+	
+	if (clearAryFlg==null || clearAryFlg==true) {
+		gMousePosition = [];
+		gMousemoveSeq = 0;
+	}
+}
+function disableMouseTrack() {
+	gCouldRecordMouseTrace = false;
+}
+function isAbleMouseTrace() {
+	return gCouldRecordMouseTrace;
+}
+function judgeMouseTrace() {
+	var minX=-1, maxX=-1, minY=-1, maxY=-1;
+	for (var i=0; i<gMousePosition.length; i++) {
+		if (minX==-1) {
+			minX = gMousePosition[i][0];
+			maxX = gMousePosition[i][0];
+			
+			minY = gMousePosition[i][1];
+			maxY = gMousePosition[i][1];
+		} else {
+			if (minX>gMousePosition[i][0])
+				minX = gMousePosition[i][0];
+			if (maxX<gMousePosition[i][0])
+				maxX = gMousePosition[i][0];
+				
+			if (minY>gMousePosition[i][1])
+				minY=gMousePosition[i][1];
+			if (maxY<gMousePosition[i][1])
+				maxY=gMousePosition[i][1];
+		}
+		
+		outputLog(gMousePosition[i][0] + ',' + gMousePosition[i][1]);
+	}
+	
+	outputLog('maxX:'+maxX + ',minX:' + minX + "; maxY:" + maxY + ",minY:" + minY);
+	outputLog('maxX-minX:' + (maxX-minX) + "; maxY-minY:" + (maxY-minY));
+	if (maxX-minX > maxY-minY)
+		outputLog('水平移动');
+	else
+		outputLog('垂直移动');
+}
+
+//#mainArea
+//.fieldarea_draggable_cmpnt
+$('body').mousemove(function(e){
+	recordMouseTrack(e);
+});
+///////////////////// end
 
 </script> 
 </body>
